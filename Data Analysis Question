@@ -1,0 +1,163 @@
+Data Analyst
+Instructions:
+1.	You have been given one Excel book with 3 Excel Sheet named Sales Data, Receipt Data (Bluedart+Payu) and Vendor details (SKU wise vendor master).
+2.	Analyze and prepare a report from the data where we have done sales and also received the payments for the sales made by mapping receipts data and sales data. 
+3.	For payments received from Blue dart and PayU, arrive at the vendor wise payment received after mapping receipts SKU wise with vendor master file. 
+4.	Prepare a summary as below
+Output : Answer
+				
+Sum of Net Amount To Transfer	 	  Sales Person
+Ref	                    Inventory	Bluedart	    PayU	      Grand Total
+                        Beetel	  25803487	  607355134	      633158621
+	                      Flipkart	560310	   10606959	       11167269
+                      	Insurance	26664320	 36628266	       63292586
+                          	RKLLP	293140449	 5072136016	    5365276465
+	                      Xiaomi-IN	15632629	  25960769	     41593398
+
+Hint: Reconciled(Sales and receipts are matching)
+Hint: Reconciled amount is Rs. 72 LPA. 
+
+##Read sales data after data cleaning
+sales<-read.xlsx2("CleanSales.xlsx", sheetName = "Sheet1")
+
+##Read receipts data after data cleaning
+receiptsBlueDart<-read.xlsx2("CleanReceiptsBlueDart.xlsx", sheetName = "Sheet1")
+receiptsPayU<-read.xlsx2("CleanReceiptsPayU.xlsx", sheetName = "Sheet1")
+
+##Read vendor data after data cleaning
+vendor<-read.xlsx2("CleanVendor.xlsx",sheetName = "Sheet1")
+
+##Join sales and vendor data by “SN”
+m <- merge(sales,vendor,by=intersect(names(sales),names(vendor)),by.sales = by,by.vendor = by)
+##Create data frame according to factor level “Inventory” 
+data<-m[grep("Beetel",m$Inventory),]
+data1<-m[grep("Flipkart",m$Inventory),]
+data2<-m[grep("Insurance",m$Inventory),]
+data3<-m[grep("RKLLP",m$Inventory),]
+data4<-m[grep("Xiaomi-IN",m$Inventory),]
+##Combine the data frames through row-binding
+data5<-rbind(data,data1,data2,data3,data4)
+
+##Merge sales and receipts data frame by “Shipping ID” and “Mi.Order.ID”
+mBlueDartShippingID <- merge(sales,receiptsBlueDart,by=intersect(names(sales),names(receiptsBlueDart)))
+mPayUMiID <- merge(sales,receiptsPayU,by=intersect(names(sales),names(receiptsPayU)))
+
+##Merge the resultant data in one data frame
+fdata5BlueDart <- merge(data5,mBlueDartShippingID,by="SN")
+fdata5PayU <- merge(data5,mPayUMiID,by="SN")
+
+##Create individual data frame each for different level of inventory for BlueDart
+beetelBlueDart<-fdata5BlueDart[grep("Beetel",fdata5BlueDart$Inventory),]
+flipkartBlueDart<-fdata5BlueDart[grep("Flipkart",fdata5BlueDart$Inventory),]
+insuranceBlueDart<-fdata5BlueDart[grep("Insurance",fdata5BlueDart$Inventory),]
+rkllpBlueDart<-fdata5BlueDart[grep("RKLLP",fdata5BlueDart$Inventory),]
+xiaomiBlueDart<-fdata5BlueDart[grep("Xiaomi-IN",fdata5BlueDart$Inventory),]
+
+##Create individual data frame each for different level of inventory for PayU
+beetelPayU<-fdata5PayU[grep("Beetel",fdata5PayU$Inventory),]
+flipkartPayU<-fdata5PayU[grep("Flipkart",fdata5PayU$Inventory),]
+insurancePayU<-fdata5PayU[grep("Insurance",fdata5PayU$Inventory),]
+rkllpPayU<-fdata5PayU[grep("RKLLP",fdata5PayU$Inventory),]
+xiaomiPayU<-fdata5PayU[grep("Xiaomi-IN",fdata5PayU$Inventory),]
+
+sumBeetelBluedart=0
+sumFlipkartBlueDart=0
+sumInsuranceBlueDart=0
+sumRkllpBlueDart=0
+sumXiaomiBlueDart=0
+
+sumBeetelPayU=0
+sumFlipkartPayU=0
+sumInsurancePayU=0
+sumRkllpPayU=0
+sumXiaomiPayU=0
+
+##Converting factor value of “Net.Receivable” into integer
+beetelBlueDart[,50] <- suppressWarnings(as.numeric(levels(beetelBlueDart[,50])[beetelBlueDart[,50]]))
+flipkartBlueDart[,50] <- suppressWarnings(as.numeric(levels(flipkartBlueDart[,50])[flipkartBlueDart[,50]]))
+insuranceBlueDart[,50] <- suppressWarnings(as.numeric(levels(insuranceBlueDart[,50])[insuranceBlueDart[,50]]))
+rkllpBlueDart[,50] <- suppressWarnings(as.numeric(levels(rkllpBlueDart[,50])[rkllpBlueDart[,50]]))
+xiaomiBlueDart[,50] <- suppressWarnings(as.numeric(levels(xiaomiBlueDart[,50])[xiaomiBlueDart[,50]]))
+
+beetelPayU[,50] <- suppressWarnings(as.numeric(levels(beetelPayU[,50])[beetelPayU[,50]]))
+flipkartPayU[,50] <- suppressWarnings(as.numeric(levels(flipkartPayU[,50])[flipkartPayU[,50]]))
+insurancePayU[,50] <- suppressWarnings(as.numeric(levels(insurancePayU[,50])[insurancePayU[,50]]))
+rkllpPayU[,50] <- suppressWarnings(as.numeric(levels(rkllpPayU[,50])[rkllpPayU[,50]]))
+xiaomiPayU[,50] <- suppressWarnings(as.numeric(levels(xiaomiPayU[,50])[xiaomiPayU[,50]])) 
+
+##Sum function each for different level of inventory for BlueDart
+for(i in 1:nrow(beetelBlueDart)){
+        if((beetelBlueDart[i,24]=="Beetel" & beetelBlueDart[i,47]=="BlueDart")==TRUE){
+                sumBeetelBluedart=sum(sumBeetelBluedart,beetelBlueDart[i,50])
+        }
+}
+beetelBlueDart=sumBeetelBluedart
+for(i in 1:nrow(flipkartBlueDart)){
+        if((flipkartBlueDart[i,24]=="Flipkart" & flipkartBlueDart[i,47]=="BlueDart")==TRUE){
+                sumFlipkartBlueDart=sum(sumFlipkartBlueDart,flipkartBlueDart[i,50])
+        }
+}
+flipkartBlueDart=sumFlipkartBlueDart
+
+for(i in 1:nrow(insuranceBlueDart)){
+        if((insuranceBlueDart[i,24]=="Insurance" & insuranceBlueDart[i,47]=="BlueDart")==TRUE){
+                sumInsuranceBlueDart=sum(sumInsuranceBlueDart,insuranceBlueDart[i,50])
+        }
+}
+insuranceBlueDart=sumInsuranceBlueDart
+
+for(i in 1:nrow(rkllpBlueDart)){
+        if((rkllpBlueDart[i,24]=="RKLLP" & rkllpBlueDart[i,47]=="BlueDart")==TRUE){
+                sumRkllpBlueDart=sum(sumRkllpBlueDart,rkllpBlueDart[i,50])
+        }
+}
+rkllpBlueDart=sumRkllpBlueDart
+
+for(i in 1:nrow(xiaomiBlueDart)){
+        if((xiaomiBlueDart[i,24]=="Xiaomi-IN" & xiaomiBlueDart[i,47]=="BlueDart")==TRUE){
+                sumXiaomiBlueDart=sum(sumXiaomiBlueDart,xiaomiBlueDart[i,50])
+        }
+}
+xiaomiBlueDart=sumXiaomiBlueDart
+#Sum function each for different level of inventory for PayU
+for(i in 1:nrow(beetelPayU)){
+        if((beetelPayU[i,24]=="Beetel" & beetelPayU[i,47]=="PayU")==TRUE){
+                sumBeetelPayU=sum(sumBeetelPayU,beetelPayU[i,50])
+        }
+}
+beetelPayU=sumBeetelPayU
+
+for(i in 1:nrow(flipkartPayU)){
+        if((flipkartPayU[i,24]=="Flipkart" & flipkartPayU[i,47]=="PayU")==TRUE){
+                sumFlipkartPayU=sum(sumFlipkartPayU,flipkartPayU[i,50])
+        }
+}
+flipkartPayU=sumFlipkartPayU
+
+for(i in 1:nrow(insurancePayU)){
+        if((insurancePayU[i,24]=="Insurance" & insurancePayU[i,47]=="PayU")==TRUE){
+                sumInsurancePayU=sum(sumInsurancePayU,insurancePayU[i,50])
+        }
+}
+insurancePayU=sumInsurancePayU
+for(i in 1:nrow(rkllpPayU)){
+        if((rkllpPayU[i,24]=="RKLLP" & rkllpPayU[i,47]=="PayU")==TRUE){
+                sumRkllpPayU=sum(sumRkllpPayU,rkllpPayU[i,50])
+        }
+}
+rkllpPayU=sumRkllpPayU
+
+for(i in 1:nrow(xiaomiPayU)){
+        if((xiaomiPayU[i,24]=="Xiaomi-IN" & xiaomiPayU[i,47]=="PayU")==TRUE){
+                sumXiaomiPayU=sum(sumXiaomiPayU,xiaomiPayU[i,50])
+        }
+}
+xiaomiPayU=sumXiaomiPayU
+##Total amount for each level of Inventory
+beetelAmt<-beetelBlueDart+beetelPayU
+flipkartAmt<-flipkartBlueDart+flipkartPayU
+insuranceAmt<-insuranceBlueDart+insurancePayU
+rkllAmt<-rkllpBlueDart+rkllpPayU
+xiaomiAmt<-xiaomiBlueDart+xiaomiPayU
+
+
